@@ -1,13 +1,13 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI(title="Home Inventory API")
 
 # 데이터 모델: 재고 아이템 하나의 형태를 정의
 class Item(BaseModel):
-    name: str
-    quantity: int
-    category: str
+    name: str = Field(min_length=1)
+    quantity: int = Field(ge=0)
+    category: str = Field(min_length=1)
 
 # 임시 저장소 (메모리), 서버 끄면 사라짐 (나중에 DB로 교체)
 inventory: dict[int, Item] = {}
