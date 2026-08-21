@@ -1,6 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+# DB관련 import
+from database import engine, Base
+import models
+
+# 앱 시작 시 모델대로 테이블 생성 (있으면 건너뜀)
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(title="Home Inventory API")
 
 # 데이터 모델: 재고 아이템 하나의 형태를 정의
