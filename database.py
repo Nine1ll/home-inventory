@@ -18,3 +18,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base: 모든 모델 클래스가 상속할 부모. 이걸 상속하면 DB 테이블이 됨
 Base = declarative_base()
+
+# 요청마다 DB 세션을 열고, 끝나면 반드시 닫아주는 함수
+# FastAPI의 Depends와 함께 쓰인다.
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db # 세션을 API 함수에 넘겨줌
+    finally:
+        db.close() # 작업이 끝나면 반드시 닫음
