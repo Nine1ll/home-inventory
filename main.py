@@ -63,7 +63,7 @@ def get_items(db: Session = Depends(get_db)):
 
 # READ One: 특정 아이템 조회
 @app.get("/items/{item_id}", response_model=schemas.ItemResponse)
-def get_items(item_id: int, db: Session = Depends(get_db)):
+def get_item(item_id: int, db: Session = Depends(get_db)):
     item = db.query(models.Item).filter(models.Item.id == item_id).first()
     if item is None:
         raise HTTPException(status_code=404, detail="아이템을 찾을 수 없습니다.")
