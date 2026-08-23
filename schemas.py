@@ -1,6 +1,6 @@
 # API로 데이터를 주고 받을 때는 모양이 달라야함 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from datetime import date, datetime
 
 # ---------- Item ----------
@@ -31,12 +31,12 @@ class ItemResponse(BaseModel):
 
 # ------ Auth ------
 class UserSignup(BaseModel):
-    email: str
+    email: EmailStr
     password: str = Field(min_length=8)
     household_name: str = Field(min_length=1)
 
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 class Token(BaseModel):
@@ -45,6 +45,6 @@ class Token(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    email: str
+    email: EmailStr
     househlod_id: int
     model_config = {"from_attributes": True}

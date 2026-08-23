@@ -25,8 +25,7 @@ def signup(data: schemas.UserSignup, db: Session = Depends(get_db)):
         invite_code=secrets.token_hex(3).upper(), # 6자리 코드 
     )
     db.add(household)
-    db.commit()
-    db.refresh(household)
+    db.flush() # commit 없이 household.id만 확보
 
     # 사용자 생성 (비밀번호는 해싱해서 저장)
     user = models.User(
@@ -45,13 +44,13 @@ def signup(data: schemas.UserSignup, db: Session = Depends(get_db)):
 # 로그인: 이메일+비밀번호 확인 후 토큰 발급
 @router.post("/login", response_model=schemas.Token)
 def login(
-    from_data: OAuth2PasswordRequestForm = Depends(),
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    user = db.query(models.User).filter(models.User.email == from_data.username).first()
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
 
     # 사용자가 없거나 비밀번화가 틀리면 (똑같이 에러 메시지로 처리 - 보안)
-    if not user or not verify_password(from_data.password, user.password_hash):
+    if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 올바르지 않습니다")
 
     token = create_access_token({"user_id": user.id, "household_id": user.household_id})
