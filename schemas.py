@@ -1,6 +1,6 @@
 # API로 데이터를 주고 받을 때는 모양이 달라야함 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from datetime import date, datetime
 
 # ---------- Item ----------
@@ -25,4 +25,26 @@ class ItemResponse(BaseModel):
     created_at: datetime
 
     # SQLAlchemy 객체를 Pydantic이 읽을 수 있게 해주는 설정
+    model_config = {"from_attributes": True}
+
+
+
+# ------ Auth ------
+class UserSignup(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8)
+    household_name: str = Field(min_length=1)
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    househlod_id: int
     model_config = {"from_attributes": True}
