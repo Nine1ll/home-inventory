@@ -26,3 +26,25 @@ class ItemResponse(BaseModel):
 
     # SQLAlchemy 객체를 Pydantic이 읽을 수 있게 해주는 설정
     model_config = {"from_attributes": True}
+
+
+
+# ------ Auth ------
+class UserSignup(BaseModel):
+    email: str
+    password: str = Field(min_length=8)
+    household_name: str = Field(min_length=1)
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    househlod_id: int
+    model_config = {"from_attributes": True}
