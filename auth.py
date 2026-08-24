@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -7,6 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
 import models
+
 
 # ------- 비밀번호 해싱 -------
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
@@ -19,7 +21,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 # ------ JWT 토큰 ------ 
-SECRET_KEY = "dev-secret-key-CHANGE-IN-PRODUCTION"
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-for-local-only")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7일
 
