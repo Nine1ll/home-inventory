@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
@@ -13,6 +14,16 @@ from auth import get_current_user
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Home Inventory API")
+
+# CORS 설정: 프론트엔드가 이 API를 호출할 수 있게 허용
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],           # 지금은 모든 출처 허용 (개발 단계)
+    allow_credentials=True,
+    allow_methods=["*"],           # GET, POST, DELETE 등 모두
+    allow_headers=["*"],           # Authorization 헤더 등 모두
+)
+
 app.include_router(auth.router)
 
 
