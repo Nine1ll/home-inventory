@@ -13,12 +13,16 @@ def build_path(location: models.Location, db: Session) -> str:
     """부모를 타고 올라가며 전체 경로 문자열을 만든다. 예: '주방 > 김치냉장고 > 2번 칸'"""
     names = [location.name]
     current = location
+    seen = {location.id}
     while current.parent_id is not None:
+        if current.parent_id in seen:   # 이미 방문한 곳이면 순환! 멈춤
+            break
         current = db.query(models.Location).filter(
             models.Location.id == current.parent_id
         ).first()
         if current is None:
             break
+        seen.add(current.id)
         names.append(current.name)
     return " > ".join(reversed(names))   # 위에서부터 순서로
 
