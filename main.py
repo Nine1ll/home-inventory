@@ -7,7 +7,7 @@ from sqlalchemy import and_
 from database import engine, Base, get_db
 import models
 import schemas
-from routers import auth
+from routers import auth, locations
 from auth import get_current_user
 
 # 앱 시작 시 모델대로 테이블 생성 (있으면 건너뜀)
@@ -25,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(locations.router)
 
 
 @app.get("/")
