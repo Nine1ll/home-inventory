@@ -48,3 +48,16 @@ class UserResponse(BaseModel):
     email: EmailStr
     househlod_id: int
     model_config = {"from_attributes": True}
+
+# ---------- Location ----------
+class LocationCreate(BaseModel):
+    name: str = Field(min_length=1)
+    parent_id: int | None = None   # 최상위면 None
+
+class LocationResponse(BaseModel):
+    id: int
+    household_id: int
+    parent_id: int | None
+    name: str
+    path: str | None = None   # "주방 > 김치냉장고 > 2번 칸" (조회 시 계산)
+    model_config = {"from_attributes": True}
