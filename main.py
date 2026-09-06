@@ -11,7 +11,7 @@ from routers import auth, locations
 from auth import get_current_user
 
 from activity import log_activity
-from routers.locations import build_path  
+from routers.locations import build_path, get_location_path
 
 from datetime import date   
 
@@ -119,10 +119,7 @@ def search_items(
     for item in items:
         r = schemas.ItemSearchResult.model_validate(item)
         # 위치 경로 채우기
-        location = db.query(models.Location).filter(
-            models.Location.id == item.location_id
-        ).first()
-        r.location_path = build_path(location, db) if location else None
+        r.location_path = get_location_path(item, db)
         results.append(r)
     return results
 
@@ -156,7 +153,7 @@ def get_expiring_items(
                 expiry_date=item.expiry_date,
                 location_id=item.location_id,
                 days_left=days_left,
-                location_path=build_path(location, db) if location else None,
+                location_path=get_location_path(item, db),
             )
             results.append(r)
 
