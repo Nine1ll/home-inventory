@@ -11,8 +11,9 @@ from routers import auth, locations
 from auth import get_current_user
 
 from activity import log_activity
-from routers.locations import build_path   # 상단 import에 추가
+from routers.locations import build_path  
 
+from datetime import date   
 
 # 앱 시작 시 모델대로 테이블 생성 (있으면 건너뜀)
 Base.metadata.create_all(bind=engine)
@@ -123,6 +124,44 @@ def search_items(
         ).first()
         r.location_path = build_path(location, db) if location else None
         results.append(r)
+    return results
+
+# 유통기한 대시보드 (§7 - 임박/만료 물건 모아보기)
+@app.get("/items/expiring", response_model=list[schemas.ExpiryItem])
+def get_expiring_items(
+    within_days: int = 3,   # 며칠 이내를 '임박'으로 볼지 (기본 3일)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    today = date.today()
+
+    # 유통기한이 있는 물건만 (내 가구, 수량 1 이상)
+    items = db.query(models.Item).filter(
+        models.Item.household_id == current_user.household_id,
+        models.Item.expiry_date.isnot(None),
+        models.Item.quantity > 0,
+    ).all()
+
+    results = []
+    for item in items:
+        days_left = (item.expiry_date - today).days
+        if days_left <= within_days:
+            location = db.query(models.Location).filter(
+                models.Location.id == item.location_id
+            ).first()
+            r = schemas.ExpiryItem(
+                id=item.id,
+                name=item.name,
+                quantity=item.quantity,
+                expiry_date=item.expiry_date,
+                location_id=item.location_id,
+                days_left=days_left,
+                location_path=build_path(location, db) if location else None,
+            )
+            results.append(r)
+
+    # 급한 순서로 정렬 (많이 지난 것부터)
+    results.sort(key=lambda x: x.days_left)
     return results
 
 # READ One: 특정 아이템 조회

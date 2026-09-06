@@ -75,3 +75,14 @@ class ItemSearchResult(BaseModel):
     location_id: int
     location_path: str | None = None   # "주방 > 김치냉장고 > 2번 칸"
     model_config = {"from_attributes": True}
+
+# ---------- 유통기한 대시보드 ----------
+class ExpiryItem(BaseModel):
+    id: int
+    name: str
+    quantity: int
+    expiry_date: date
+    location_id: int
+    location_path: str | None = None
+    days_left: int   # D-day (음수면 이미 지남)
+    model_config = {"from_attributes": True}
