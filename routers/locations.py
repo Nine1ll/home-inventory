@@ -27,6 +27,17 @@ def build_path(location: models.Location, db: Session) -> str:
     return " > ".join(reversed(names))   # 위에서부터 순서로
 
 
+def get_location_path(item, db: Session) -> str | None:
+    """물건(item)의 위치 경로 문자열을 반환한다. 위치가 없으면 None.
+    검색·대시보드 등에서 반복되던 '위치 조회 + build_path' 패턴을 통합."""
+    if item.location_id is None:
+        return None
+    location = db.query(models.Location).filter(
+        models.Location.id == item.location_id
+    ).first()
+    return build_path(location, db) if location else None
+
+
 # CREATE: 위치 생성
 @router.post("", response_model=schemas.LocationResponse)
 def create_location(
