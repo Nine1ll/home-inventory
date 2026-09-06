@@ -65,3 +65,13 @@ class LocationResponse(BaseModel):
 # ---------- 꺼내기 ----------
 class ItemConsume(BaseModel):
     quantity: int = Field(ge=1)
+
+# ---------- 검색 ----------
+class ItemSearchResult(BaseModel):
+    id: int
+    name: str
+    quantity: int
+    expiry_date: date | None
+    location_id: int
+    location_path: str | None = None   # "주방 > 김치냉장고 > 2번 칸"
+    model_config = {"from_attributes": True}
