@@ -9,6 +9,7 @@ import models
 import schemas
 from routers import auth, locations
 from auth import get_current_user
+from activity import log_activity
 
 # 앱 시작 시 모델대로 테이블 생성 (있으면 건너뜀)
 Base.metadata.create_all(bind=engine)
@@ -51,6 +52,9 @@ def create_item(
 
     if existing:
         existing.quantity += item.quantity
+        # §6 로그: 기존 배치에 수량 추가
+        log_activity(db, current_user.household_id, current_user.id,
+                     existing.id, "create", item.quantity)
         db.commit()
         db.refresh(existing)
         return existing
@@ -64,6 +68,10 @@ def create_item(
         expiry_date=item.expiry_date
     )
     db.add(new_item)
+    db.flush()   # new_item.id를 확보 (로그에 넣기 위해) - 저장 전에는 id가 없으니까 확보 필요
+    # §6 로그: 신규 물건 등록
+    log_activity(db, current_user.household_id, current_user.id,
+                 new_item.id, "create", item.quantity)
     db.commit()
     db.refresh(new_item)
     return new_item
@@ -112,3 +120,34 @@ def delete_item(
     db.delete(item)
     db.commit()
     return {"message": f"아이템 {item_id} 삭제 완료"}
+
+
+# CONSUME: 물건 꺼내기 (§6 - 수량 감소 + 로그)
+@app.post("/items/{item_id}/consume", response_model=schemas.ItemResponse)
+def consume_item(
+    item_id: int,
+    data: schemas.ItemConsume,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    item = db.query(models.Item).filter(
+        models.Item.id == item_id,
+        models.Item.household_id == current_user.household_id,
+    ).first()
+    if item is None:
+        raise HTTPException(status_code=404, detail="아이템을 찾을 수 없습니다")
+
+    # 재고보다 많이 꺼내려 하면 거부
+    if data.quantity > item.quantity:
+        raise HTTPException(
+            status_code=400,
+            detail=f"재고({item.quantity}개)보다 많이 꺼낼 수 없습니다",
+        )
+
+    item.quantity -= data.quantity
+    # §6 로그: 소비 (음수 delta로 기록)
+    log_activity(db, current_user.household_id, current_user.id,
+                 item.id, "consume", -data.quantity)
+    db.commit()
+    db.refresh(item)
+    return item

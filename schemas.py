@@ -61,3 +61,7 @@ class LocationResponse(BaseModel):
     name: str
     path: str | None = None   # "주방 > 김치냉장고 > 2번 칸" (조회 시 계산)
     model_config = {"from_attributes": True}
+
+# ---------- 꺼내기 ----------
+class ItemConsume(BaseModel):
+    quantity: int = Field(ge=1)
