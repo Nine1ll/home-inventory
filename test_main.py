@@ -1,10 +1,8 @@
 from fastapi.testclient import TestClient
 from main import app
 
-client = TestClient(app)
 
-
-def test_read_root():
+def test_read_root(client):
     """루트 경로(/)를 호출하면 환영 메시지가 나온다."""
     response = client.get("/")
     assert response.status_code == 200
