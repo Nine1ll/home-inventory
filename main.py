@@ -9,7 +9,10 @@ import models
 import schemas
 from routers import auth, locations
 from auth import get_current_user
+
 from activity import log_activity
+from routers.locations import build_path   # 상단 import에 추가
+
 
 # 앱 시작 시 모델대로 테이블 생성 (있으면 건너뜀)
 Base.metadata.create_all(bind=engine)
@@ -40,6 +43,17 @@ def create_item(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    # location_id가 내 가구의 실제 위치인지 검증 (데이터 무결성)
+    location = db.query(models.Location).filter(
+        models.Location.id == item.location_id,
+        models.Location.household_id == current_user.household_id,
+    ).first()
+    if location is None:
+        raise HTTPException(
+            status_code=404,
+            detail="지정한 위치를 찾을 수 없습니다",
+        )
+    
     # 3: 같은 가구+품목명+위치+유통기한이면 기존 배치 수량 증가
     existing = db.query(models.Item).filter(
         and_(
@@ -87,6 +101,29 @@ def get_items(
         models.Item.household_id == current_user.household_id
     ).all()
 
+# SEARCH: 이름으로 물건 검색 (§5 - 위치 경로 포함)
+@app.get("/items/search", response_model=list[schemas.ItemSearchResult])
+def search_items(
+    q: str, # /items/search?q=우유처럼 URL에 붙여서 호출
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    # 이름에 검색어가 포함된 물건 (내 가구 것만)
+    items = db.query(models.Item).filter(
+        models.Item.household_id == current_user.household_id,
+        models.Item.name.contains(q), # SQL의 LIKE '%우유%'로 변환
+    ).all()
+
+    results = []
+    for item in items:
+        r = schemas.ItemSearchResult.model_validate(item)
+        # 위치 경로 채우기
+        location = db.query(models.Location).filter(
+            models.Location.id == item.location_id
+        ).first()
+        r.location_path = build_path(location, db) if location else None
+        results.append(r)
+    return results
 
 # READ One: 특정 아이템 조회
 @app.get("/items/{item_id}", response_model=schemas.ItemResponse)
@@ -151,3 +188,4 @@ def consume_item(
     db.commit()
     db.refresh(item)
     return item
+
