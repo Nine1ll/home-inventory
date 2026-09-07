@@ -86,3 +86,14 @@ class ExpiryItem(BaseModel):
     location_path: str | None = None
     days_left: int   # D-day (음수면 이미 지남)
     model_config = {"from_attributes": True}
+
+# ---------- 활동 로그 ----------
+class ActivityLogResponse(BaseModel):
+    id: int
+    item_id: int | None
+    item_name: str | None = None      # PO 요청: 물건 이름
+    action: str
+    quantity_delta: int
+    actor_email: str | None = None    # PO 요청: 누가 (이메일)
+    created_at: datetime
+    model_config = {"from_attributes": True}

@@ -7,7 +7,7 @@ from sqlalchemy import and_
 from database import engine, Base, get_db
 import models
 import schemas
-from routers import auth, locations
+from routers import auth, locations, activity
 from auth import get_current_user
 
 from activity import log_activity
@@ -31,7 +31,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(locations.router)
-
+app.include_router(activity.router)
 
 @app.get("/")
 def read_root():
